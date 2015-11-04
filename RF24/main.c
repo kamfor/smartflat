@@ -2,11 +2,10 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
-
+#include "RF23.c"
 
 #define sbi(var, mask)   ((var) |= (uint8_t)(1 << mask))
 #define cbi(var, mask)   ((var) &= (uint8_t)~(1 << mask))
-
 
 void ioinit(void);    
 void delay_ms(uint16_t x); 
@@ -14,11 +13,6 @@ void delay_us(uint8_t x);
 //void sleep();
 
 uint8_t data_array[4];
-uint8_t flaga = 0; 
-
-#include "nRF24L01.c"
-
-
 
 int main (void)
 {
@@ -28,36 +22,17 @@ int main (void)
 
 	while(1)
 	{
-		
-					
-			
-			if(flaga){
-			data_array[0] = 0xFF;
-			data_array[1] = 0XFF;
-			data_array[2] = 0XFF;
-			data_array[3] = 0xFF;
-			}
-			else{
-		    data_array[0] = 0xAA;
-			data_array[1] = 0XAA;
-			data_array[2] = 0XAA;
-			data_array[3] = 0xAA;
-			}
 
-			
-			 
-		
 		if(PINB & (1<<PB2)){
-		flaga =!flaga;  
-		PORTA |= (1<<PA7); 
+		PORTA |= (1<<PA7);
+ 		data_array[0] = 0xFF;
+		data_array[1] = 0XFF;
+		data_array[2] = 0XFF;
+		data_array[3] = 0xFF;
 		transmit_data(); 
 		delay_ms(200);
 		}
 		else PORTA &= ~(1<<PA7);
-		
-		
-		
-		
 		
 		//tx_send_command(0x20, 0x00); //Power down RF
 		//cbi(PORTA, PA1); //Go into standby mode
@@ -80,8 +55,8 @@ void ioinit (void)
 	//Enable pull-up resistors 
 	PORTB |=(1<<PB2);
 	
-    //Init Timer0 for delay_us
-    TCCR0B = (1<<CS00); //Set Prescaler to No Prescaling (assume we are running at internal 1MHz). CS00=1 
+   	 //Init Timer0 for delay_us
+  	  TCCR0B = (1<<CS00); //Set Prescaler to No Prescaling (assume we are running at internal 1MHz). CS00=1 
 
 	configure_transmitter();
 }
@@ -102,9 +77,7 @@ void delay_ms(uint16_t x)
 void delay_us(uint8_t x)
 {
 	TIFR0 = 0x01; //Clear any interrupt flags on Timer2
-	
-    TCNT0 = 256 - x; //256 - 125 = 131 : Preload timer 2 for x clicks. Should be 1us per click
-
+   	TCNT0 = 256 - x; //256 - 125 = 131 : Preload timer 2 for x clicks. Should be 1us per click
 	while( (TIFR0 & (1<<TOV0)) == 0);
 }
 
